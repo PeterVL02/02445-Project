@@ -7,6 +7,9 @@ import pandas as pd
 load_dotenv()
 
 class Gender(Enum):
+    """
+    Unfortunately relatively narrow at the moment
+    """
     Male = 0
     Female = 1
 
@@ -78,7 +81,10 @@ def create_db(user: str, initial_commit: Entry) -> None:
     user_id = get_id(user)
     if not check_db(user):
         with open(f'data/db{user_id}.pkl', 'wb') as f:
-            pickle.dump(initial_commit.to_pd(), f)
+            try:
+                pickle.dump(initial_commit.to_pd(), f)
+            except AttributeError:
+                pickle.dump(initial_commit, f)
 
     else:
         raise ValueError("Database already exists")
@@ -106,14 +112,34 @@ def get_db_head(user: str, n: int = 5) -> pd.DataFrame:
     """
     return get_db(user).head(n)
 
+def merge_databases() -> pd.DataFrame:
+    """
+    Merge all databases into one
+    """
+    seen_files = []
+
+    df = pd.DataFrame()
+    for file in os.listdir('data/'):
+        if file.endswith('.pkl'):
+            seen_files.append(file)
+            df = pd.concat([df, pd.read_pickle(f'data/{file}')])
+
+    for file in seen_files:
+        if 'db' in file and len(file) == 7:
+            os.remove(f'data/{file}')
+
+    commit('all', df)
+
+    return get_db('all')
 
 
     
 
 if __name__ == '__main__':
-    entry1 = Entry('Maria', Gender.Male, 0.5, 0.5, 0.5, 1)
-
+    entry1 = Entry(name='Maria',
+                   gender=Gender.Female,
+                   current_salary=1000,
+                     deserved_salary=2000,
+                        round_=1)
+    
     commit('Peter', entry1)
-    # commit('Peter', entry2)
-    df = get_db('Peter')
-    print(df.head(20))
