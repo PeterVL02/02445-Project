@@ -3,6 +3,9 @@ from dotenv import load_dotenv
 from enum import Enum
 import pickle
 import pandas as pd
+import logging
+
+logging.basicConfig(level=logging.INFO)
 
 load_dotenv()
 
@@ -36,6 +39,24 @@ class Entry:
     def to_pd(self):
         return pd.DataFrame([self.__dict__])
     
+def get_id(name: str) -> int:
+    """
+    Get the id of the given name from the .env file
+    """
+    name = name.upper()
+    identifyer = int(os.getenv(name))
+    return identifyer
+
+def safety_check(func: callable) -> callable:
+    logging.info(f'Running safety check on {func.__name__}')
+    def wrapper(*args, **kwargs):
+        pass
+        return func(*args, **kwargs)
+    logging.info(f'Successfully ran safety check on {func.__name__}')
+    return wrapper
+
+
+
 def get_entry(df: pd.DataFrame, index: int) -> Entry:
     """
     Get the entry at the given index
@@ -46,13 +67,6 @@ def get_entry(df: pd.DataFrame, index: int) -> Entry:
                  df.iloc[index]['round_'])
 
 
-def get_id(name: str) -> int:
-    """
-    Get the id of the given name from the .env file
-    """
-    name = name.upper()
-    identifyer = int(os.getenv(name))
-    return identifyer
 
 def unpack_values(entry: Entry) -> list:
     """
@@ -89,6 +103,7 @@ def create_db(user: str, initial_commit: Entry) -> None:
     else:
         raise ValueError("Database already exists")
 
+@safety_check
 def commit(user: str, entry: Entry) -> None:
     """
     Commit an entry to the appropriate database
@@ -112,6 +127,7 @@ def get_db_head(user: str, n: int = 5) -> pd.DataFrame:
     """
     return get_db(user).head(n)
 
+@safety_check
 def merge_databases() -> pd.DataFrame:
     """
     Merge all databases into one
