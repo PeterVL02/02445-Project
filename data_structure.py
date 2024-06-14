@@ -148,6 +148,21 @@ def merge_databases() -> pd.DataFrame:
 
     return get_db('all')
 
+def commit_multiple(user: str,
+                    name: str,
+                    currents: list,
+                    deserveds: list,
+                    round_: int) -> None:
+    """
+    Commit multiple entries to the database
+    """
+    for i in range(len(currents)):
+        entry = Entry(name=name,
+                      current_salary=currents[i],
+                        deserved_salary=deserveds[i],
+                            round_=round_)
+        commit(user, entry)
+
 
     
 
