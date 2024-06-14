@@ -150,6 +150,7 @@ def merge_databases() -> pd.DataFrame:
 
 def commit_multiple(user: str,
                     name: str,
+                    gender: Gender,
                     currents: list,
                     deserveds: list,
                     round_: int) -> None:
@@ -158,6 +159,7 @@ def commit_multiple(user: str,
     """
     for i in range(len(currents)):
         entry = Entry(name=name,
+                      gender=gender,
                       current_salary=currents[i],
                         deserved_salary=deserveds[i],
                             round_=round_)
