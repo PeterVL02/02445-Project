@@ -4,6 +4,7 @@ from enum import Enum
 import pickle
 import pandas as pd
 import logging
+import numpy as np
 
 logging.basicConfig(level=logging.INFO)
 
@@ -108,6 +109,7 @@ def commit(user: str, entry: Entry) -> None:
     """
     Commit an entry to the appropriate database
     """
+    assert isinstance(entry, Entry), "Entry must be of type Entry."
     if not check_db(user):
         print("Creating new database")
         create_db(user, entry)
@@ -148,6 +150,7 @@ def merge_databases() -> pd.DataFrame:
 
     return get_db('all')
 
+@safety_check
 def commit_multiple(user: str,
                     name: str,
                     gender: Gender,
@@ -165,14 +168,58 @@ def commit_multiple(user: str,
                             round_=round_)
         commit(user, entry)
 
+def locate(user: str, 
+           column: str,
+           name: str = None,
+           gender: Gender = None,
+           dataframe: pd.DataFrame = None) -> np.ndarray:
+    """
+    Locate columns in the database. Example:
+    locate(user='Robin'
+            column='deserved_salary,
+             gender=Gender.Male)
+    This returns an array of deserved salaries for all men in Robin's database.
+    Could also have specified name='John Doe' to get the deserved salary of John Doe.
 
+    If dataframe is provided, the function will search in that dataframe instead and user is ignored.
+    Useful if search_all() is used.
+    """
+    assert name or gender, "Either name or gender should be specified"
+    assert not (name and gender), "Cannot query both name and gender at the same time"
     
+    df = get_db(user) if dataframe is None else dataframe
+    if dataframe is not None:
+        logging.info(f'Dataframe provided, ignoring user {user}')
+        user = 'all'
+
+    if name:
+        logging.info(f'Locating {column} for {name} in {user}\'s database')
+        return df.loc[df['name'] == name][column].values
+    else:
+        logging.info(f'Locating {column} for {gender.name.lower()}s in {user}\'s database')
+        return df.loc[df['gender'] == gender][column].values
+    
+def search_all() -> pd.DataFrame:
+    """
+    Returns dataframe of all databases
+    """
+    df = pd.DataFrame()
+    for file in os.listdir('data/'):
+        if file.endswith('.pkl') and 'db' in file:
+            df = pd.concat([df, pd.read_pickle(f'data/{file}')])
+    return df
 
 if __name__ == '__main__':
-    entry1 = Entry(name='Maria',
-                   gender=Gender.Female,
-                   current_salary=1000,
-                     deserved_salary=2000,
+    entry1 = Entry(name='DeMarcus Cousins',
+                   gender=Gender.Male,
+                   current_salary=3000,
+                     deserved_salary=6000,
                         round_=1)
     
-    commit('Peter', entry1)
+    commit('Nicholas', entry1)
+
+    print(locate(
+        user = 'Nicholas',
+        column = 'deserved_salary',
+        gender = Gender.Male,
+        dataframe=search_all()))
