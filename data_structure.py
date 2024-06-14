@@ -14,24 +14,21 @@ class Entry:
     def __init__(self,
                  name: str,
                  gender: Gender,
-                 total_earnings: float,
                  current_salary: float,
-                 raise_percentage: float,
+                 deserved_salary: float,
                  round_: int):
         self.name = name
         self.gender = gender
-        self.target = total_earnings
         self.current_salary = current_salary
-        self.raise_percentage = raise_percentage
+        self.deserved_salary = deserved_salary
         self.round_ = round_
 
     def _gender_bin_(self):
         return self.gender.value
 
     def __repr__(self):
-        return f"""Entry(Name: {self.name}, Gender: {self.gender}, Target: {self.target}, 
-                Current Salary: {self.current_salary}, Raise Percentage: {self.raise_percentage}, 
-                Round: {self.round_})"""
+        return f"""Entry(Name: {self.name}, Gender: {self.gender}, Current Salary: {self.current_salary},
+                Deserved Salary: {self.deserved_salary}, Round: {self.round_})"""   
     
     def to_pd(self):
         return pd.DataFrame([self.__dict__])
@@ -42,8 +39,8 @@ def get_entry(df: pd.DataFrame, index: int) -> Entry:
     """
 
     return Entry(df.iloc[index]['name'], df.iloc[index]['gender'], 
-                 df.iloc[index]['target'], df.iloc[index]['current_salary'], 
-                 df.iloc[index]['raise_percentage'], df.iloc[index]['round'])
+                 df.iloc[index]['current_salary'], df.iloc[index]['deserved_salary'], 
+                 df.iloc[index]['round_'])
 
 
 def get_id(name: str) -> int:
