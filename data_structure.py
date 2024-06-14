@@ -17,6 +17,17 @@ class Gender(Enum):
     Male = 0
     Female = 1
 
+    def __gt__(self, other) -> bool:
+        if isinstance(other, Gender):
+            return self.value > other.value
+        
+    def __lt__(self, other) -> bool:
+        if  isinstance(other, Gender):
+            return self.value < other.value
+        
+    def __eq__(self, other) -> bool:
+        if isinstance(other, Gender):
+            return self.value == other.value
 class Entry:
     def __init__(self,
                  name: str,
