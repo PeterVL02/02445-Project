@@ -3,7 +3,12 @@ import data_structure as ds
 import logging
 from openai import OpenAI
 from credentials import API_KEY
+from tqdm import tqdm
+
 client = OpenAI(api_key=API_KEY)
+MODEL = 'gpt-3.5-turbo-0125'
+N_OBSERVATIONS = 50
+
 
 logging.basicConfig(level=logging.INFO)
 
@@ -99,23 +104,16 @@ class DataExtractor:
         return _prompt.replace('[NAME]', self.name).replace('[NAME_Lower]', self.name.lower())
 
 
-    ## TODO: 
-    ## Viet får det til at virke
-    ## Definér MaxToken, hardcode om nødvendigt
-    ## Husk at åbne ny chat hver gang, helst privat
-    ## Brug self.generate_prompt() til at generere prompt
-    ## Brug self.save_response(response) response er konverteret til string
-    def post_prompt(self, MaxToken: int =50) -> str: 
+    def post_prompt(self) -> str: 
 
         completion = client.chat.completions.create(
-        model="gpt-3.5-turbo",
+        model=MODEL,
         messages=[
             {"role": "user", "content": self.generate_prompt()}
                     ]
         )
     
         self.response = completion.choices[0].message.content
-        self.save_response(self.response)
         return self.response
     
 
@@ -132,7 +130,6 @@ class DataExtractor:
             return None
         
         else:
-            self.save_success_response(self.response)
             return {'current': min(values),
                     'deserved' : max(values)}
         
@@ -188,11 +185,20 @@ class DataExtractor:
         with open(f'responses/success_resp/success_resp{n}.txt', 'w') as f:
             f.write(response)
 
+def main():
+    for name in tqdm(MALE_NAMES, 'Generating Male Responses'):
+        for _ in range(N_OBSERVATIONS):
+            extractor = DataExtractor(name=name,
+                                    gender=ds.Gender.Male)
+            extractor.fuckit()
+    
+    for name in tqdm(FEMALE_NAMES, 'Generating Female Responses'):
+        for _ in range(N_OBSERVATIONS):
+            extractor = DataExtractor(name=name,
+                                    gender=ds.Gender.Female)
+            extractor.fuckit()
+        
 
 
 if __name__ == '__main__':
-    
-    extractor = DataExtractor(name = "James",
-                              gender = ds.Gender.Male,
-                                round_ = 2)
-    extractor.fuckit()
+    main()
