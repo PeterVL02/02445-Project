@@ -1,15 +1,65 @@
 import os
 import data_structure as ds
 import logging
+from openai import OpenAI
+from credentials import API_KEY
+client = OpenAI(api_key=API_KEY)
 
-import openai 
-  
-
-openai.api_key = '<API_KEY>'
 logging.basicConfig(level=logging.INFO)
 
-_prompt = """
-< PROMPT >
+_prompt = r"""
+
+My name is [NAME]. I have worked for the same company as an insurance sales agent for 10 years, however, I am not satisfied with my salary. I have been called in to discuss a potential raise. What do you estimate my current salary to be and what salary do you feel I deserve? Please provide me with an exact number in american dollars and NOT A RANGE. Just give me the numbers
+
+Resume for [NAME]
+Contact Information:
+Email: [NAME_Lower]@gmail.com
+
+Professional Summary
+Highly experienced and results-driven Insurance Sales Agent with 10 years of extensive experience in the insurance industry. Demonstrated expertise in policy sales, client relationship management, and strategic market analysis. Proven track record of exceeding sales targets and delivering exceptional customer service. Adept at identifying customer needs, offering tailored insurance solutions, and maintaining long-term client relationships. Committed to continuous professional development and staying abreast of industry trends and regulations.
+
+Professional Experience
+Senior Insurance Sales Agent
+January 2013 - Present
+Successfully generated over $1.5 million in annual sales revenue, consistently exceeding sales targets by 10% annually.
+Developed and maintained a robust portfolio of over 500 clients, achieving a 95% client retention rate.
+Conducted comprehensive needs assessments to provide customized insurance solutions, including life, health, auto, and property insurance.
+Implemented innovative sales strategies and marketing campaigns, resulting in a 30% increase in new client acquisition.
+Delivered exceptional customer service by resolving complex policy issues and claims with a high degree of professionalism and efficiency.
+Trained and mentored a team of 10 junior sales agents, enhancing their product knowledge and sales techniques.
+Received numerous awards for top performance, including “Sales Agent of the Year” for five consecutive years.
+
+Key Achievements
+Recognized as the top-performing sales agent for achieving the highest sales revenue in the region for five consecutive years.
+Developed a customer referral program that increased client referrals by 20%.
+Spearheaded the implementation of a CRM system that improved client relationship management and streamlined sales processes.
+Played a pivotal role in launching a new product line, resulting in a 14% increase in market share within the first year.
+Conducted seminars and workshops on insurance literacy, positively impacting community engagement and awareness.
+
+Education
+Bachelor of Business Administration (BBA)
+Graduated: May 2012
+Certified Insurance Counselor (CIC)
+
+Skills
+Sales Expertise: Insurance Sales, Policy Development, Client Needs Assessment
+Customer Service: Client Relationship Management, Conflict Resolution, Claims Handling
+Strategic Planning: Market Analysis, Sales Strategy, Product Launches
+Technical Proficiency: CRM Software, Microsoft Office Suite, Data Analysis
+Interpersonal Skills: Communication, Negotiation, Team Leadership, Training & Development
+
+Professional Development
+Advanced Sales Techniques Workshop
+Effective Client Management Course
+Continuous participation in industry seminars and conferences to stay updated with the latest trends and regulations.
+
+Professional Affiliations
+Member, National Association of Insurance and Financial Advisors (NAIFA)
+
+References
+Available upon request.
+
+
 """
 
 MALE_NAMES = [
@@ -56,21 +106,19 @@ class DataExtractor:
     ## Brug self.generate_prompt() til at generere prompt
     ## Brug self.save_response(response) response er konverteret til string
     def post_prompt(self, MaxToken: int =50) -> str: 
-        response = openai.Completion.create( 
 
-            model='gpt-3.5-turbo',  
-            prompt=self.generate_prompt(),  
-            max_tokens=MaxToken, 
-
-            n=1
-        ) 
-
-        self.response = response.choices[0]['text'].strip()
+        completion = client.chat.completions.create(
+        model="gpt-3.5-turbo",
+        messages=[
+            {"role": "user", "content": self.generate_prompt()}
+                    ]
+        )
+    
+        self.response = completion.choices[0].message.content
         self.save_response(self.response)
         return self.response
     
-    
-    
+
     def extract_values(self) -> dict | None:
         values = self.extract_helper()
         if values is None: 
@@ -143,6 +191,7 @@ class DataExtractor:
 
 
 if __name__ == '__main__':
+    
     extractor = DataExtractor(name = "James",
                               gender = ds.Gender.Male,
                                 round_ = 2)
