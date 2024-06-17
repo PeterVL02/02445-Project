@@ -7,7 +7,7 @@ from tqdm import tqdm
 
 client = OpenAI(api_key=API_KEY)
 MODEL = 'gpt-4o'
-N_OBSERVATIONS = 10
+N_OBSERVATIONS = 50
 
 
 logging.basicConfig(level=logging.INFO)
@@ -121,19 +121,22 @@ class DataExtractor:
         values = self.extract_helper()
         if values is None: 
             logging.critical(f"Failed to extract values for {self.name}")
-            self.save_failed_response(self.response)
+            if self.save_response_flag:
+                self.save_failed_response(self.response)
             return None
         
         if len(values) != 2:
             logging.critical(f"More than 2 values extracted for {self.name}")
-            self.save_failed_response(self.response)
+            if self.save_response_flag:
+                self.save_failed_response(self.response)
             return None
         else:
-            self.save_success_response(self.response)
+            if self.save_response_flag:
+                self.save_success_response(self.response)
             return {'current': min(values),
                     'deserved' : max(values)}
         
-    def push_to_db(self):
+    def push_to_db(self) -> None:
         values = self.extract_values()
         if values:
             entry = ds.Entry(name=self.name,
@@ -143,7 +146,7 @@ class DataExtractor:
                                 round_=self.round_)
             ds.commit('GPT', entry)
 
-    def fuckit(self):
+    def fuckit(self) -> None:
         self.post_prompt()
         self.push_to_db()
 
@@ -169,7 +172,7 @@ class DataExtractor:
         else:
             return None
 
-    def save_response(self,response: str):
+    def save_response(self,response: str) -> None:
         """
         Save the response
         """
@@ -177,7 +180,7 @@ class DataExtractor:
         with open(f'responses/all_resp/resp{n}.txt', 'w') as f:
             f.write(response)
 
-    def save_failed_response(self,response: str):
+    def save_failed_response(self,response: str) -> None:
         """
         Save the failed response
         """
@@ -185,7 +188,7 @@ class DataExtractor:
         with open(f'responses/failed_resp/failed_resp{n}.txt', 'w') as f:
             f.write(response)
 
-    def save_success_response(self,response: str):
+    def save_success_response(self,response: str) -> None:
         """
         Save the success response
         """
@@ -193,7 +196,7 @@ class DataExtractor:
         with open(f'responses/success_resp/success_resp{n}.txt', 'w') as f:
             f.write(response)
 
-def main():
+def main() -> None:
     logging.disable(logging.CRITICAL)
 
     for gender in [ds.Gender.Male, ds.Gender.Female]:
@@ -202,7 +205,7 @@ def main():
         for name in tqdm(names, description):
             for _ in range(N_OBSERVATIONS):
                 extractor = DataExtractor(name=name, gender=gender, 
-                                          round_=4)
+                                          round_=5)
                 extractor.fuckit()
         
 
