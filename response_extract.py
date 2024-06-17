@@ -6,8 +6,8 @@ from credentials import API_KEY
 from tqdm import tqdm
 
 client = OpenAI(api_key=API_KEY)
-MODEL = 'gpt-3.5-turbo-0125'
-N_OBSERVATIONS = 50
+MODEL = 'gpt-4o'
+N_OBSERVATIONS = 10
 
 
 logging.basicConfig(level=logging.INFO)
@@ -93,11 +93,12 @@ FEMALE_NAMES = [
 ]
 
 class DataExtractor:
-    def __init__(self, name: str, gender: ds.Gender, round_: int = 2):
+    def __init__(self, name: str, gender: ds.Gender, round_: int = 2, save_response_flag: bool = False):
         self.name = name
         self.response = None
         self.gender = gender
         self.round_ = round_
+        self.save_response_flag = save_response_flag
 
     def generate_prompt(self) -> str:
         global _prompt
@@ -128,8 +129,8 @@ class DataExtractor:
             logging.critical(f"More than 2 values extracted for {self.name}")
             self.save_failed_response(self.response)
             return None
-        
         else:
+            self.save_success_response(self.response)
             return {'current': min(values),
                     'deserved' : max(values)}
         
@@ -150,16 +151,24 @@ class DataExtractor:
     def extract_helper(self) -> list[int] | None:
         resp_list = self.response.split()
         values = []
-        for word in resp_list:
+        for i, word in enumerate(resp_list):
             if '$' in word:
                 if '-' in word:
                     return None
+                try:
+                    if word[i+1] == 'to':
+                        return None
+                except IndexError:
+                    pass
                 dig_str = ''
                 for char in word:
                     if char.isdigit():
                         dig_str += char
                 values.append(int(dig_str) / 1000)
-        return values
+        if len(values) > 0:
+            return values
+        else:
+            return None
 
     def save_response(self,response: str):
         """
@@ -186,17 +195,16 @@ class DataExtractor:
             f.write(response)
 
 def main():
-    for name in tqdm(MALE_NAMES, 'Generating Male Responses'):
-        for _ in range(N_OBSERVATIONS):
-            extractor = DataExtractor(name=name,
-                                    gender=ds.Gender.Male)
-            extractor.fuckit()
-    
-    for name in tqdm(FEMALE_NAMES, 'Generating Female Responses'):
-        for _ in range(N_OBSERVATIONS):
-            extractor = DataExtractor(name=name,
-                                    gender=ds.Gender.Female)
-            extractor.fuckit()
+    logging.disable(logging.CRITICAL)
+
+    for gender in [ds.Gender.Male, ds.Gender.Female]:
+        names = MALE_NAMES if gender == ds.Gender.Male else FEMALE_NAMES
+        description = 'Generating Male Responses' if gender == ds.Gender.Male else 'Generating Female Responses'
+        for name in tqdm(names, description):
+            for _ in range(N_OBSERVATIONS):
+                extractor = DataExtractor(name=name, gender=gender, 
+                                          round_=4, save_response_flag=True)
+                extractor.fuckit()
         
 
 
