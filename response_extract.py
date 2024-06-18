@@ -6,7 +6,7 @@ from credentials import API_KEY
 from tqdm import tqdm
 
 client = OpenAI(api_key=API_KEY)
-MODEL = 'gpt-4o'
+MODEL = 'gpt-3.5-turbo'
 N_OBSERVATIONS = 50
 
 
@@ -91,16 +91,16 @@ FEMALE_NAMES = [
     'Sarah'
 ]
 NEUTRAL_NAMES = [
-    'Riley',
-    'Avery',
-    'Taylor',
+    'Jackie',
+    'Jessie',
     'Casey',
-    'Jamie',
-    'Finley',
-    'Rowan',
-    'Quinn',
-    'Emerson',
-    'Jordan'
+    'Rene',
+    'Jordan',
+    'Frankie',
+    'Taylor',
+    'Robbie',
+    'Kendall',
+    'Harley'
 ]
 
 
@@ -229,10 +229,11 @@ def main(genders: list[ds.Gender] | ds.Gender) -> None:
         for name in tqdm(names, description):
             for _ in range(N_OBSERVATIONS):
                 extractor = DataExtractor(name=name, gender=gender, 
-                                          round_=6)
+                                          round_=7)
                 extractor.fuckit()
         
 
 
 if __name__ == '__main__':
-    main(ds.Gender.Neutral)
+    genders = [ds.Gender.Male, ds.Gender.Female, ds.Gender.Neutral]
+    main(genders)
