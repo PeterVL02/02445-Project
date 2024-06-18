@@ -285,6 +285,61 @@ def merge_all() -> pd.DataFrame | None:
                     pickle.dump(content, f)
         logging.info('changes reverted')
         return search_all()
+    
+def get_model(model: 'str') -> pd.DataFrame:
+    """
+    Models:
+    - 4o: Includes Male, Female, Neutral
+    - 3.5-Turbo: Includes Male, Female, Neutral
+    - Pilot: Includes Male, Female (Based on 3.5-Turbo)
+    """
+    df = search_all()
+
+    assert model == '4o' or model == '3.5-Turbo' or model == 'Pilot', "Invalid model"
+
+    if model == '4o':
+        return df[(df['round_'] == 5) | (df['round_'] == 6)]
+    elif model == '3.5-Turbo':
+        return df[df['round_'] == 7]
+    elif model == 'Pilot':
+        return df[df['round_'] ==1]
+    
+def get_gender(df: pd.DataFrame) -> list[pd.DataFrame]:
+    res = []
+    df = df.copy()
+    df['gender_str'] = df['gender'].apply(lambda x: x.name)
+    for gen in df['gender_str'].unique():
+        res.append(df[df['gender_str'] == gen])
+    return res
+
+def categorize(df: pd.DataFrame) -> tuple[pd.DataFrame]:
+
+    df = df.copy()
+    df['gender_str'] = df['gender'].apply(lambda x: x.name)
+    curr_group = pd.concat([d.value_counts('current_salary').sort_index()
+                             for d in get_gender(df)], axis=1).reset_index()
+    curr_group.replace(np.nan, 0, inplace=True)
+    curr_group = curr_group.apply(lambda x: x.astype(int), axis=1)
+    curr_group.columns = ['current_salary', *df['gender_str'].unique()]
+    curr_group = curr_group.sort_values('current_salary')
+
+    des_group = pd.concat([d.value_counts('deserved_salary').sort_index()
+                             for d in get_gender(df)], axis=1).reset_index()
+    des_group.replace(np.nan, 0, inplace=True)
+    des_group = des_group.apply(lambda x: x.astype(int), axis=1)
+    des_group.columns = ['deserved_salary', *df['gender_str'].unique()]
+    des_group = des_group.sort_values('deserved_salary')
+
+    return curr_group, des_group
+
+def cutter(df: pd.DataFrame, cuts: list[int], labels: list[str]) -> pd.DataFrame:
+    column = df.columns[0]
+    df = df.copy()
+    df['salary_group'] = pd.cut(df[column],
+                                            cuts,
+                                            labels=labels)
+    df = df.groupby('salary_group').sum().reset_index().drop(columns=column)
+    return df
 
 if __name__ == '__main__':  
     df = search_all()
