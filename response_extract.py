@@ -90,6 +90,19 @@ FEMALE_NAMES = [
     'Karen',
     'Sarah'
 ]
+NEUTRAL_NAMES = [
+    'Riley',
+    'Avery',
+    'Taylor',
+    'Casey',
+    'Jamie',
+    'Finley',
+    'Rowan',
+    'Quinn',
+    'Emerson',
+    'Jordan'
+]
+
 
 class DataExtractor:
     def __init__(self, name: str, gender: ds.Gender, round_: int = 2, save_response_flag: bool = False):
@@ -196,19 +209,30 @@ class DataExtractor:
         with open(f'responses/success_resp/success_resp{n}.txt', 'w') as f:
             f.write(response)
 
-def main() -> None:
-    logging.disable(logging.CRITICAL)
+def main(genders: list[ds.Gender] | ds.Gender) -> None:
+    logging.disable(logging.INFO)
 
-    for gender in [ds.Gender.Male, ds.Gender.Female]:
-        names = MALE_NAMES if gender == ds.Gender.Male else FEMALE_NAMES
-        description = 'Generating Male Responses' if gender == ds.Gender.Male else 'Generating Female Responses'
+    if isinstance(genders, ds.Gender):
+        genders = [genders]
+
+    for gender in genders:
+        if gender == ds.Gender.Male:
+            names = MALE_NAMES
+            description = 'Generating Male Responses'
+        elif gender == ds.Gender.Female:
+            names = FEMALE_NAMES
+            description = 'Generating Female Responses'
+        elif gender == ds.Gender.Neutral:
+            names = NEUTRAL_NAMES
+            description = 'Generating Neutral Responses'
+
         for name in tqdm(names, description):
             for _ in range(N_OBSERVATIONS):
                 extractor = DataExtractor(name=name, gender=gender, 
-                                          round_=5)
+                                          round_=6)
                 extractor.fuckit()
         
 
 
 if __name__ == '__main__':
-    main()
+    main(ds.Gender.Neutral)

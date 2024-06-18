@@ -16,6 +16,7 @@ class Gender(Enum):
     """
     Male = 0
     Female = 1
+    Neutral = 2
 
     def __gt__(self, other) -> bool:
         if isinstance(other, Gender):
