@@ -1,0 +1,12 @@
+\begin{tabular}{llrr}
+\toprule
+ & salary_group & Male & Female \\
+\midrule
+0 & <60 & 94 & 146 \\
+1 & 60-70 & 311 & 305 \\
+2 & >70 & 93 & 48 \\
+0 & <80 & 54 & 91 \\
+1 & 80-90 & 353 & 357 \\
+2 & >90 & 86 & 46 \\
+\bottomrule
+\end{tabular}
